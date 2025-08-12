@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>About</h1>
+    <p>Hi, I am Jeffrey Smith — a full‑stack developer focused on building thoughtful digital products.</p>
+  </div>
+</section>
+
+<section class="container about-grid">
+  <div>
+    <img class="about-photo" src="assets/pictures/Hike.jpg" alt="Developer portrait">
+  </div>
+  <div>
+    <h3>Background</h3>
+    <p>I craft web applications with Python, JavaScript, and cloud‑native tooling. I care about performance, developer experience, and maintainability. I have shipped products for large scale enterprises across analytics, financial technology, and electronic commerce.</p>
+    <h3>Technology Stack</h3>
+    <ul class="bullets">
+      <li>Python (Flask, FastAPI), JavaScript and TypeScript</li>
+      <li>PostgreSQL, Redis, SQLAlchemy</li>
+      <li>Docker, continuous integration and continuous delivery, cloud providers</li>
+      <li>Add more, React, Vite, Node etc.</li>
+    </ul>
+    <div class="btn-row">
+      <a class="btn" href="https://github.com/Jeff-Smith31" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn ghost" href="{{ url_for('resume') }}">Resume</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

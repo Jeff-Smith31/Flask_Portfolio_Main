@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-copy">
+      <h1>Building bold digital products</h1>
+      <p>I design and develop end‑to‑end solutions: intuitive front ends, robust back ends, and scalable cloud infrastructure.</p>
+      <div class="hero-cta">
+        <a href="{{ url_for('work') }}" class="btn primary">See Work</a>
+        <a href="{{ url_for('services') }}" class="btn ghost">Services</a>
+      </div>
+    </div>
+    <div class="hero-media">
+      <img src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1400&auto=format&fit=crop" alt="Developer desk setup">
+    </div>
+  </div>
+  <div class="marquee" aria-hidden="true">
+    <div class="track">
+      <span>Application Programming Interfaces · Microservices · Cloud · Continuous Integration and Continuous Delivery · Data Visualization · Development and Operations · User Experience · </span>
+      <span>Application Programming Interfaces · Microservices · Cloud · Continuous Integration and Continuous Delivery · Data Visualization · Development and Operations · User Experience · </span>
+    </div>
+  </div>
+</section>
+
+<!-- Trusted logos placeholder commented out per request
+<section class="trusted">
+  <div class="container">
+    <ul class="logo-row">
+      <li><img src="https://dummyimage.com/120x40/111/fff.png&text=ACME" alt="ACME"></li>
+      <li><img src="https://dummyimage.com/120x40/111/fff.png&text=OMEGA" alt="OMEGA"></li>
+      <li><img src="https://dummyimage.com/120x40/111/fff.png&text=NIMBUS" alt="NIMBUS"></li>
+      <li><img src="https://dummyimage.com/120x40/111/fff.png&text=POLAR" alt="POLAR"></li>
+      <li><img src="https://dummyimage.com/120x40/111/fff.png&text=ZENITH" alt="ZENITH"></li>
+    </ul>
+  </div>
+</section>
+-->
+
+<section class="highlights container">
+  <div class="grid-3">
+    <div class="card">
+      <h3>Full‑stack Development</h3>
+      <p>Modern front ends with component frameworks, reliable Python back ends, and clean application programming interfaces.</p>
+    </div>
+    <div class="card">
+      <h3>Data and Analytics</h3>
+      <p>From extract‑transform‑load to dashboards. I turn raw data into insight through pipelines and interactive visualization.</p>
+    </div>
+    <div class="card">
+      <h3>Cloud Native</h3>
+      <p>Containers, continuous integration and continuous delivery, infrastructure as code. Deploy anywhere with confidence.</p>
+    </div>
+  </div>
+</section>
+
+<section class="showcase">
+  <div class="container">
+    <h2>Selected work</h2>
+    <div class="portfolio-grid">
+      <a class="tile" href="#">
+        <img src="https://images.unsplash.com/photo-1526378722484-bd91ca387e72?q=80&w=1200&auto=format&fit=crop" alt="Data dashboard">
+        <div class="tile-meta"><strong>Analytics Dashboard</strong><span>Flask · Plotly</span></div>
+      </a>
+      <a class="tile" href="#">
+        <img src="https://images.unsplash.com/photo-1513128034602-7814ccaddd4e?q=80&w=1200&auto=format&fit=crop" alt="Electronic commerce">
+        <div class="tile-meta"><strong>Electronic Commerce Backend</strong><span>Stripe · PostgreSQL</span></div>
+      </a>
+      <a class="tile" href="#">
+        <img src="https://images.unsplash.com/photo-1516251193007-45ef944ab0c6?q=80&w=1200&auto=format&fit=crop" alt="Chat application">
+        <div class="tile-meta"><strong>Real‑time Chat</strong><span>WebSocket · Redis</span></div>
+      </a>
+      <a class="tile" href="#">
+        <img src="https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1200&auto=format&fit=crop" alt="Machine Learning application programming interface">
+        <div class="tile-meta"><strong>Machine Learning Inference API</strong><span>Python · Docker</span></div>
+      </a>
+    </div>
+    <div class="center">
+      <a class="btn" href="{{ url_for('work') }}">Explore portfolio</a>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="container cta-inner">
+    <h2>Let’s build something great</h2>
+    <p>Available for freelance and full‑time roles. Based anywhere the internet reaches.</p>
+    <a href="{{ url_for('contact') }}" class="btn primary">Start a project</a>
+  </div>
+</section>
+{% endblock %}

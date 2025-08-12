@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Work</h1>
+    <p>Selected projects and experiments.</p>
+  </div>
+</section>
+
+<section class="container">
+  <div class="portfolio-grid">
+    {% for item in items %}
+      <a class="tile" href="{{ item.link }}">
+        <img src="{{ item.image }}" alt="{{ item.title }}">
+        <div class="tile-meta">
+          <strong>{{ item.title }}</strong>
+          <span>{{ ', '.join(item.tags) }}</span>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

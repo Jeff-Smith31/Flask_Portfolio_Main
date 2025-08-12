@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Services</h1>
+    <p>I combine strategy, design, and engineering to deliver end‑to‑end solutions.</p>
+  </div>
+</section>
+
+<section class="container grid-3 service-grid">
+  <div class="card">
+    <h3>Product Strategy</h3>
+    <ul class="bullets">
+      <li>Road mapping and technical discovery</li>
+      <li>Architecture and technology stack selection</li>
+      <li>Proof of concept and minimum viable products</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Design and Front End</h3>
+    <ul class="bullets">
+      <li>Responsive user interface and user experience</li>
+      <li>Component systems</li>
+      <li>Accessibility and performance</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Back End and Development and Operations</h3>
+    <ul class="bullets">
+      <li>Application programming interfaces and microservices</li>
+      <li>Data pipelines</li>
+      <li>Cloud and continuous integration and continuous delivery</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Serverless and Cloud on Amazon Web Services</h3>
+    <ul class="bullets">
+      <li>Amazon API Gateway, Amazon Web Services Lambda, and Elastic Container Service</li>
+      <li>Amazon DynamoDB, Amazon Aurora, and Amazon Simple Storage Service</li>
+      <li>High availability, low latency, and cost effectiveness</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Back End Application Programming Interfaces and Microservices</h3>
+    <ul class="bullets">
+      <li>Python and Java services with clear contracts and versioning</li>
+      <li>Authentication, authorization, and input validation</li>
+      <li>Observability with structured logging, metrics, and tracing</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Data Engineering and Analytics</h3>
+    <ul class="bullets">
+      <li>Real‑time and batch pipelines for operational and analytical data</li>
+      <li>Amazon Redshift, Amazon DynamoDB, and Structured Query Language</li>
+      <li>Dashboarding and business intelligence for decision support</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Database Architecture and Optimization</h3>
+    <ul class="bullets">
+      <li>Schema design for relational and NoSQL systems</li>
+      <li>Query optimization, indexing, and performance tuning</li>
+      <li>Data migration planning and data integrity safeguards</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Operational Tools and Dashboards</h3>
+    <ul class="bullets">
+      <li>Workforce planning and tracking applications</li>
+      <li>Real‑time operational metrics and alerting</li>
+      <li>Role‑based dashboards for managers and stakeholders</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Automation and Reporting</h3>
+    <ul class="bullets">
+      <li>Automated data extraction and reporting pipelines</li>
+      <li>Compliance and audit support (Sarbanes–Oxley Act)</li>
+      <li>Scheduled workflows and notifications to reduce manual work</li>
+    </ul>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="container cta-inner">
+    <h2>Have a project in mind?</h2>
+    <a class="btn primary" href="{{ url_for('contact') }}">Let’s talk</a>
+  </div>
+</section>
+{% endblock %}

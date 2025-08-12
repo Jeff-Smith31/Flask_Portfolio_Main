@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Resume</h1>
+    <p>Snapshot of experiencen and skills.</p>
+  </div>
+</section>
+
+<section class="container resume">
+  <h3>Experience</h3>
+  {% if experience %}
+    <ul class="timeline">
+      {% for block in experience %}
+        <li>
+          <strong>{{ block.header }}</strong>
+          {% if block.lines %}
+            <ul class="bullets">
+              {% for ln in block.lines %}
+                <li>{{ ln }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <ul class="timeline">
+      <li>
+        <strong>Software Developer</strong> — Amazon
+        <p>N/A</p>
+      </li>
+    </ul>
+  {% endif %}
+
+  <h3>Skills</h3>
+  <ul class="bullets two-col">
+    <li>Flask, FastAPI, Django</li>
+    <li>React and Vue basics</li>
+    <li>PostgreSQL, Redis</li>
+    <li>Docker, Kubernetes basics</li>
+    <li>Continuous integration and continuous delivery, GitHub Actions</li>
+    <li>Testing and Quality Assurance</li>
+  </ul>
+
+  <div class="btn-row">
+    <a class="btn" href="{{ url_for('assets', filename='JEFFREY_SMITH.pdf') }}" target="_blank" rel="noopener">Download PDF</a>
+    <a class="btn ghost" href="https://github.com/Jeff-Smith31" target="_blank" rel="noopener">GitHub</a>
+  </div>
+
+  <div style="margin-top:20px; border:1px solid var(--line); border-radius:12px; overflow:hidden;">
+    <iframe src="{{ url_for('assets', filename='JEFFREY_SMITH.pdf') }}" title="Jeffrey Smith Resume PDF" style="width:100%; height:700px; border:0;"></iframe>
+  </div>
+</section>
+{% endblock %}
