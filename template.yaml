@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Flask Portfolio - AWS SAM template (Serverless option B)
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 30
+    MemorySize: 512
+    Tracing: PassThrough
+
+Parameters:
+  SecretKeyParam:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: Flask SECRET_KEY environment variable (required; set to a strong random value).
+
+Resources:
+  FlaskFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: python
+    Properties:
+      CodeUri: .
+      Handler: app.lambda_handler
+      Description: Flask serverless function for the portfolio site.
+      Environment:
+        Variables:
+          SECRET_KEY: !Ref SecretKeyParam
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        Root:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+        Proxy:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - '*'
+          AllowMethods:
+            - GET
+            - POST
+            - OPTIONS
+
+Outputs:
+  FunctionName:
+    Description: Name of the Lambda function
+    Value: !Ref FlaskFunction
+  FunctionArn:
+    Description: ARN of the Lambda function
+    Value: !GetAtt FlaskFunction.Arn
+  FunctionUrl:
+    Description: Public Function URL (Auth NONE)
+    Value: !GetAtt FlaskFunctionUrl.FunctionUrl
+  HttpApiUrl:
+    Description: Base URL for the HttpApi managed by SAM
+    Value: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/'

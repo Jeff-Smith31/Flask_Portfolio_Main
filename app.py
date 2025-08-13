@@ -5,10 +5,6 @@ import os
 # --- Resume PDF parsing helpers ---
 
 def extract_experience_from_pdf(pdf_path: str):
-    """Attempt to extract the 'Experience' section from a resume PDF.
-    Returns a list of blocks. Each block is a dict: { 'header': str, 'lines': [str, ...] }.
-    Parsing is best‑effort and tolerant to unknown formats.
-    """
     try:
         from PyPDF2 import PdfReader
     except Exception:
@@ -90,7 +86,24 @@ def extract_experience_from_pdf(pdf_path: str):
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret_change_me')
+    # SECRET_KEY handling:
+    # - In AWS Lambda (production), require SECRET_KEY to be set via env; do not fall back to a static default.
+    # - In local/dev (when not running under Lambda), generate a strong ephemeral key if not provided.
+    secret_from_env = os.environ.get('SECRET_KEY')
+    running_in_lambda = bool(os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
+    if secret_from_env:
+        app.config['SECRET_KEY'] = secret_from_env
+    else:
+        if running_in_lambda:
+            raise RuntimeError("SECRET_KEY is not set. Configure a strong SECRET_KEY in the Lambda environment or via SAM parameter SecretKeyParam.")
+        else:
+            try:
+                import secrets
+                generated = secrets.token_urlsafe(32)
+            except Exception:
+                generated = os.urandom(32).hex()
+            # Note: This key is ephemeral and will rotate on each restart; suitable for local dev only.
+            app.config['SECRET_KEY'] = generated
 
     # Preload resume experience at startup (prioritize curated data from user input)
     provided = [
@@ -207,3 +220,13 @@ def create_app():
 
 # For flask run
 app = create_app()
+
+# AWS Lambda handler (via awsgi)
+try:
+    import awsgi  # type: ignore
+
+    def lambda_handler(event, context):
+        return awsgi.response(app, event, context)
+except Exception:
+    # awsgi not available in local/dev environments
+    pass

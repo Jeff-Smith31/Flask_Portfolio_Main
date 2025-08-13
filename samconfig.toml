@@ -1,0 +1,11 @@
+version = 0.1
+
+[default]
+[default.build]
+use_container = false
+
+[default.deploy]
+stack_name = "flask-portfolio-sam"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+region = "us-east-1"
