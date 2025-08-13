@@ -77,27 +77,27 @@ def create_app():
         {
             'title': 'Wedding Photography Website',
             'tags': ['React', 'Vite', 'Tailwind'],
-            'image': '/assets/pictures/wedding_photography_card.jpg',
+            'image': 'pictures/wedding_photography_card.jpg',
             'link': 'https://github.com/Jeff-Smith31/WeddingPhotographySite'
         },
         {
             'title': 'Data Dashboard Application',
             'tags': ['Python', 'Tkinter', 'Pandas', 'Application Programming Interfaces'],
-            'image': '/assets/pictures/data_dashboard_card.jpg',
+            'image': 'pictures/data_dashboard_card.jpg',
             #Photo by Luke Chesser on Unsplash
             'link': 'https://github.com/Jeff-Smith31/Dashboard_App'
         },
         {
             'title': 'Deep Learning Model for Digit Recognition',
             'tags': ['Python', 'tensorflow'],
-            'image': '/assets/pictures/deep_learning_card.jpg',
+            'image': 'pictures/deep_learning_card.jpg',
             #Photo by Pietro Jeng on Unsplash
             'link': 'https://github.com/Jeff-Smith31/Deep_Learning'
         },
         {
             'title': 'Database with RESTful API',
             'tags': ['FastAPI', 'OAuth2', 'SQLAlchemy'],
-            'image': '/assets/pictures/API_card.jpg',
+            'image': 'pictures/API_card.jpg',
             #Photo by Riku Lu on Unsplash
             'link': 'https://github.com/Jeff-Smith31/API_Python'
         },
