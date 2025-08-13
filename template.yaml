@@ -28,7 +28,7 @@ Parameters:
     Description: Verified SES identity to send from (defaults to ContactRecipientParam if left blank).
   SesRegionParam:
     Type: String
-    Default: ''
+    Default: 'us-east-1'
     Description: Optional SES region override (leave blank to use Lambda region).
 
 Resources:
