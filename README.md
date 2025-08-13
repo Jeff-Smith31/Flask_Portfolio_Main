@@ -53,3 +53,9 @@ sam deploy --parameter-overrides SecretKeyParam=$(python -c "import secrets; pri
 ```
 ## License
 This project is licensed under the Apache 2.0 License. See LICENSE for details.
+
+
+## CI/CD note on SECRET_KEY
+- The GitHub Actions workflow will use the repository secret FLASK_SECRET_KEY if set.
+- If FLASK_SECRET_KEY is not set, the workflow will generate a strong random key for that deployment using Python's secrets.token_urlsafe(32).
+- Important: When a new random key is generated, previously issued session cookies will become invalid (users will be logged out). To avoid unexpected session rotation, set a stable FLASK_SECRET_KEY in your repository secrets.

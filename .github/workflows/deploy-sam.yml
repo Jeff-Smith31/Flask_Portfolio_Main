@@ -43,8 +43,8 @@ jobs:
           FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
         run: |
           if [ -z "${FLASK_SECRET_KEY}" ]; then
-            echo "Error: FLASK_SECRET_KEY GitHub secret is required and not set." >&2
-            exit 1
+            echo "Warning: FLASK_SECRET_KEY GitHub secret not set. Generating a strong random key for this deploy (will rotate sessions)." >&2
+            FLASK_SECRET_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
           fi
           sam deploy \
             --stack-name "$STACK_NAME" \
