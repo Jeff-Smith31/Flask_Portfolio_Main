@@ -3,7 +3,7 @@
 <section class="page-hero">
   <div class="container">
     <h1>Resume</h1>
-    <p>Snapshot of experiencen and skills.</p>
+    <p>Snapshot of experience and skills.</p>
   </div>
 </section>
 
@@ -12,14 +12,38 @@
   {% if experience %}
     <ul class="timeline">
       {% for block in experience %}
+        {% set parts = (block.header or '').split(' — ') %}
+        {% set role = parts[0] if parts|length > 0 else '' %}
+        {% set rest = parts[1] if parts|length > 1 else '' %}
+        {% set rest_parts = rest.split(' (') if rest else [] %}
+        {% set company = rest_parts[0] if rest_parts|length > 0 else '' %}
+        {% set dates = '(' ~ rest_parts[1] if rest_parts|length > 1 else '' %}
         <li>
-          <strong>{{ block.header }}</strong>
+          <h4 class="exp-role">{{ role }}</h4>
+          <div class="exp-meta">
+            <span class="company">{{ company }}</span>
+            {% if dates %}<span class="dates">{{ dates }}</span>{% endif %}
+          </div>
           {% if block.lines %}
+            {% set total = block.lines|length %}
+            {% set visible = block.lines[:2] %}
+            {% set extra = block.lines[2:] %}
             <ul class="bullets">
-              {% for ln in block.lines %}
+              {% for ln in visible %}
                 <li>{{ ln }}</li>
               {% endfor %}
             </ul>
+            {% if total > 2 %}
+              <details class="more-bullets">
+                <summary>Show more</summary>
+                <ul class="bullets">
+                  {% for ln in extra %}
+                    <li>{{ ln }}</li>
+                  {% endfor %}
+                </ul>
+                <a href="#" class="toggle-bottom show-less" aria-label="Show less">Show less</a>
+              </details>
+            {% endif %}
           {% endif %}
         </li>
       {% endfor %}
@@ -27,7 +51,8 @@
   {% else %}
     <ul class="timeline">
       <li>
-        <strong>Software Developer</strong> — Amazon
+        <h4 class="exp-role">Software Developer</h4>
+        <div class="exp-meta"><span class="company">Amazon</span></div>
         <p>N/A</p>
       </li>
     </ul>

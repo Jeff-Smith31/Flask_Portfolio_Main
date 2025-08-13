@@ -1,94 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 import os
 
-
-# --- Resume PDF parsing helpers ---
-
-def extract_experience_from_pdf(pdf_path: str):
-    try:
-        from PyPDF2 import PdfReader
-    except Exception:
-        return []
-
-    if not os.path.exists(pdf_path):
-        return []
-
-    # 1) Extract raw text
-    try:
-        reader = PdfReader(pdf_path)
-        text = "\n".join(page.extract_text() or "" for page in reader.pages)
-    except Exception:
-        return []
-
-    if not text:
-        return []
-
-    # Normalize whitespace
-    raw = "\n".join(line.strip() for line in text.splitlines())
-
-    # 2) Find Experience section boundaries
-    lower = raw.lower()
-    start_idx = lower.find("experience")
-    if start_idx == -1:
-        # Try alternate headings
-        for key in ["professional experience", "work experience"]:
-            start_idx = lower.find(key)
-            if start_idx != -1:
-                break
-    if start_idx == -1:
-        return []
-
-    # Candidates for next section headers to stop at
-    stops = [
-        "education", "skills", "projects", "certifications", "publications", "awards", "summary", "profile",
-    ]
-    end_idx = len(raw)
-    for s in stops:
-        i = lower.find(s, start_idx + 10)
-        if i != -1:
-            end_idx = min(end_idx, i)
-    section = raw[start_idx:end_idx].strip()
-
-    # Remove the heading line itself if present
-    lines = [ln for ln in section.splitlines() if ln]
-    if lines and lines[0].lower().startswith("experience"):
-        lines = lines[1:]
-
-    # 3) Split into blocks separated by blank lines or obvious role separators
-    # Reconstruct with explicit blank lines to detect breaks
-    # Here, we make a simple heuristic: treat lines that look like role headers as new blocks
-    blocks = []
-    current = []
-    def flush():
-        nonlocal current
-        if current:
-            header = current[0]
-            rest = current[1:]
-            blocks.append({"header": header, "lines": rest})
-            current = []
-
-    for ln in lines:
-        # Heuristic: a header often contains a dash or an en dash between Title and Company or has dates in parentheses
-        if current and (" — " in ln or " - " in ln or "(" in ln and ")" in ln):
-            # Potentially a new header line; if previous current is small, flush before starting anew
-            # Safer approach: start a new block if current already has a header and at least one detail line
-            flush()
-        current.append(ln)
-    flush()
-
-    # Filter out very small noise blocks
-    cleaned = []
-    for b in blocks:
-        if b["header"] and any(ch.isalpha() for ch in b["header"]):
-            cleaned.append(b)
-    return cleaned
+from resume_parser import extract_experience_from_pdf
 
 
 def create_app():
     app = Flask(__name__)
-    # SECRET_KEY handling:
-    # - In AWS Lambda (production), require SECRET_KEY to be set via env; do not fall back to a static default.
-    # - In local/dev (when not running under Lambda), generate a strong ephemeral key if not provided.
     secret_from_env = os.environ.get('SECRET_KEY')
     running_in_lambda = bool(os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
     if secret_from_env:
@@ -102,10 +19,14 @@ def create_app():
                 generated = secrets.token_urlsafe(32)
             except Exception:
                 generated = os.urandom(32).hex()
-            # Note: This key is ephemeral and will rotate on each restart; suitable for local dev only.
             app.config['SECRET_KEY'] = generated
 
-    # Preload resume experience at startup (prioritize curated data from user input)
+    # Contact email configuration
+    app.config['CONTACT_RECIPIENT'] = os.environ.get('CONTACT_RECIPIENT')
+    # If CONTACT_SENDER not provided, default to recipient (valid when SES verifies that address)
+    app.config['CONTACT_SENDER'] = os.environ.get('CONTACT_SENDER') or app.config['CONTACT_RECIPIENT']
+
+    # Preload resume experience at startup
     provided = [
         {
             "header": "Software Developer — Amazon (Apr 2023 – Mar 2025)",
@@ -151,9 +72,41 @@ def create_app():
         pdf_path = os.path.join(os.path.dirname(__file__), 'assets', 'JEFFREY_SMITH.pdf')
         app.config['RESUME_EXPERIENCE'] = extract_experience_from_pdf(pdf_path)
 
+    # Shared portfolio items
+    portfolio_items = [
+        {
+            'title': 'Wedding Photography Website',
+            'tags': ['React', 'Vite', 'Tailwind'],
+            'image': '/assets/pictures/wedding_photography_card.jpg',
+            'link': 'https://github.com/Jeff-Smith31/WeddingPhotographySite'
+        },
+        {
+            'title': 'Data Dashboard Application',
+            'tags': ['Python', 'Tkinter', 'Pandas', 'Application Programming Interfaces'],
+            'image': '/assets/pictures/data_dashboard_card.jpg',
+            #Photo by Luke Chesser on Unsplash
+            'link': 'https://github.com/Jeff-Smith31/Dashboard_App'
+        },
+        {
+            'title': 'Deep Learning Model for Digit Recognition',
+            'tags': ['Python', 'tensorflow'],
+            'image': '/assets/pictures/deep_learning_card.jpg',
+            #Photo by Pietro Jeng on Unsplash
+            'link': 'https://github.com/Jeff-Smith31/Deep_Learning'
+        },
+        {
+            'title': 'Database with RESTful API',
+            'tags': ['FastAPI', 'OAuth2', 'SQLAlchemy'],
+            'image': '/assets/pictures/API_card.jpg',
+            #Photo by Riku Lu on Unsplash
+            'link': 'https://github.com/Jeff-Smith31/API_Python'
+        },
+    ]
+
     @app.route('/')
     def index():
-        return render_template('index.html')
+        # Show a subset of items on the home page
+        return render_template('index.html', items=portfolio_items[:4])
 
     @app.route('/services')
     def services():
@@ -161,47 +114,62 @@ def create_app():
 
     @app.route('/work')
     def work():
-        # Dummy portfolio items
-        items = [
-            {
-                'title': 'Real‑time Chat Application',
-                'tags': ['Flask', 'WebSocket', 'Redis'],
-                'image': 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1200&auto=format&fit=crop',
-                'link': '#'
-            },
-            {
-                'title': 'Data Dashboard',
-                'tags': ['Plotly', 'Pandas', 'Application Programming Interfaces'],
-                'image': 'https://images.unsplash.com/photo-1551281044-8d8e372c61f7?q=80&w=1200&auto=format&fit=crop',
-                'link': '#'
-            },
-            {
-                'title': 'Electronic Commerce Backend',
-                'tags': ['Flask', 'Stripe', 'PostgreSQL'],
-                'image': 'https://images.unsplash.com/photo-1519337265831-281ec6cc8514?q=80&w=1200&auto=format&fit=crop',
-                'link': '#'
-            },
-            {
-                'title': 'Machine Learning Inference API',
-                'tags': ['FastAPI', 'Scikit‑Learn', 'Docker'],
-                'image': 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop',
-                'link': '#'
-            },
-        ]
-        return render_template('work.html', items=items)
+        return render_template('work.html', items=portfolio_items)
 
     @app.route('/about')
     def about():
         return render_template('about.html')
 
+    @app.route('/certifications')
+    def certifications():
+        return render_template('certifications.html')
+
     @app.route('/contact', methods=['GET', 'POST'])
     def contact():
         if request.method == 'POST':
-            name = request.form.get('name')
-            email = request.form.get('email')
-            message = request.form.get('message')
-            # For demo purposes, just flash a message.
-            flash(f'Thanks {name}! Your message has been received. I will get back to {email} soon.', 'success')
+            name = (request.form.get('name') or '').strip()
+            email_addr = (request.form.get('email') or '').strip()
+            message = (request.form.get('message') or '').strip()
+
+            if not name or not email_addr or not message:
+                flash('Please fill out all fields.', 'error')
+                return redirect(url_for('contact'))
+
+            recipient = app.config.get('CONTACT_RECIPIENT')
+            sender = app.config.get('CONTACT_SENDER')
+
+            if not recipient or not sender:
+                # In local/dev without env vars, avoid crashing and inform via flash
+                flash('Message received locally. Email delivery is not configured. Set CONTACT_RECIPIENT/CONTACT_SENDER to enable email.', 'error')
+                return redirect(url_for('contact'))
+
+            subject = f"New contact form submission from {name}"
+            body_text = (
+                f"You received a new message via the portfolio contact form.\n\n"
+                f"Name: {name}\n"
+                f"Email: {email_addr}\n\n"
+                f"Message:\n{message}\n"
+            )
+
+            # Try to send via AWS SES
+            try:
+                import boto3  # type: ignore
+                import os as _os
+                region = _os.environ.get('AWS_REGION') or _os.environ.get('AWS_DEFAULT_REGION') or 'us-east-1'
+                ses = boto3.client('ses', region_name=region)
+                ses.send_email(
+                    Source=sender,
+                    Destination={'ToAddresses': [recipient]},
+                    Message={
+                        'Subject': {'Data': subject, 'Charset': 'UTF-8'},
+                        'Body': {'Text': {'Data': body_text, 'Charset': 'UTF-8'}}
+                    },
+                    ReplyToAddresses=[email_addr] if email_addr else []
+                )
+                flash(f'Thanks {name}! Your message has been sent. I will get back to {email_addr} soon.', 'success')
+            except Exception as e:
+                # Do not expose sensitive details; optionally log if you have logging
+                flash('Sorry, there was an issue sending your message. Please try again later.', 'error')
             return redirect(url_for('contact'))
         return render_template('contact.html')
 
@@ -212,7 +180,7 @@ def create_app():
 
     @app.route('/assets/<path:filename>')
     def assets(filename):
-        # Serve files from the assets directory (e.g., JEFFREY_SMITH.pdf)
+        # Serve files from the assets directory
         return send_from_directory(os.path.join(app.root_path, 'assets'), filename)
 
     return app
@@ -227,21 +195,14 @@ try:
     from urllib.parse import parse_qs
 
     def _normalize_event_for_awsgi(evt: dict) -> dict:
-        """
-        Normalize Lambda Function URL / API Gateway HTTP API v2 events so that
-        awsgi (which may expect httpMethod in some paths) can handle them.
-        This is a minimal, non-invasive mapping: if httpMethod is missing but
-        requestContext.http.method is present, we synthesize httpMethod and a
-        few related fields from v2 keys. Otherwise, return the event unchanged.
-        """
+
         try:
             if isinstance(evt, dict) and 'httpMethod' not in evt:
                 rc = evt.get('requestContext') or {}
                 http = rc.get('http') or {}
                 method = http.get('method')
                 if method:
-                    # Build a shallow API Gateway v1-like shape required by some adapters
-                    new_evt = dict(evt)  # shallow copy
+                    new_evt = dict(evt)
                     new_evt['httpMethod'] = method
                     # Path
                     path = evt.get('rawPath') or http.get('path') or evt.get('path') or '/'

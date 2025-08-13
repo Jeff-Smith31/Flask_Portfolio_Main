@@ -14,4 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
       nav.style.gap = visible ? '' : '12px';
     });
   }
+
+  // Resume: collapse details when clicking bottom "Show less"
+  document.querySelectorAll('.more-bullets .show-less').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const details = el.closest('details.more-bullets');
+      if (details) details.open = false;
+    });
+  });
 });

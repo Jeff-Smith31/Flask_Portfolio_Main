@@ -26,8 +26,16 @@ Resources:
       Environment:
         Variables:
           SECRET_KEY: !Ref SecretKeyParam
+          CONTACT_RECIPIENT: ''  # set via sam deploy or console to your email (SES verified)
+          CONTACT_SENDER: ''     # optional; defaults to CONTACT_RECIPIENT
       Policies:
         - AWSLambdaBasicExecutionRole
+        - Statement:
+            Effect: Allow
+            Action:
+              - ses:SendEmail
+              - ses:SendRawEmail
+            Resource: "*"
       Events:
         Root:
           Type: HttpApi
@@ -59,6 +67,52 @@ Resources:
       Action: lambda:InvokeFunctionUrl
       Principal: '*'
       FunctionUrlAuthType: NONE
+
+
+  RootCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: jeffrey-smith-dev.com
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: jeffrey-smith-dev.com
+          HostedZoneId: Z09052411SYRKYXWBGQQD
+
+  RootCustomDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: jeffrey-smith-dev.com
+      DomainNameConfigurations:
+        - CertificateArn: !Ref RootCertificate
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  RootApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties:
+      ApiId: !Ref ServerlessHttpApi
+      DomainName: !Ref RootCustomDomain
+      Stage: '$default'
+
+  RootDomainAliasA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z09052411SYRKYXWBGQQD
+      Name: jeffrey-smith-dev.com.
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt RootCustomDomain.RegionalDomainName
+        HostedZoneId: !GetAtt RootCustomDomain.RegionalHostedZoneId
+
+  RootDomainAliasAAAA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z09052411SYRKYXWBGQQD
+      Name: jeffrey-smith-dev.com.
+      Type: AAAA
+      AliasTarget:
+        DNSName: !GetAtt RootCustomDomain.RegionalDomainName
+        HostedZoneId: !GetAtt RootCustomDomain.RegionalHostedZoneId
 
 Outputs:
   FunctionName:
