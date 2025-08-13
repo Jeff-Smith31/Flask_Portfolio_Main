@@ -36,7 +36,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: SAM Build
-        run: sam build
+        run: sam build --no-use-container
 
       - name: SAM Deploy
         env:
