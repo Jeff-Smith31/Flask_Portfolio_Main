@@ -19,8 +19,6 @@ Parameters:
 Resources:
   FlaskFunction:
     Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: python
     Properties:
       CodeUri: .
       Handler: app.lambda_handler
