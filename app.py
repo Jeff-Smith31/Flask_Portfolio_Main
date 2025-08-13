@@ -9,9 +9,18 @@ from resume_parser import extract_experience_from_pdf
 
 def create_app():
     app = Flask(__name__)
-    # Basic logging setup (inherits Lambda's log handler in AWS)
-    logging.basicConfig(level=logging.INFO)
+    # Robust logging setup: respect LOG_LEVEL env, force handlers to ensure CloudWatch capture in Lambda
+    log_level_name = (os.environ.get('LOG_LEVEL') or 'INFO').upper()
+    level = getattr(logging, log_level_name, logging.INFO)
+    logging.basicConfig(
+        level=level,
+        format='%(asctime)s %(levelname)s %(name)s: %(message)s',
+        force=True,
+    )
     logger = logging.getLogger(__name__)
+    # Ensure Flask app logger uses same level
+    app.logger.setLevel(level)
+    logger.info("Logging configured. level=%s", log_level_name)
 
     secret_from_env = os.environ.get('SECRET_KEY')
     running_in_lambda = bool(os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
@@ -145,8 +154,12 @@ def create_app():
                 flash('Please fill out all fields.', 'error')
                 return redirect(url_for('contact'))
 
-            recipient = 'jeffrey.russell.smith@gmail.com'
-            sender = 'jeffrey.russell.smith@gmail.com'
+            recipient = app.config.get('CONTACT_RECIPIENT')
+            sender = app.config.get('CONTACT_SENDER') or recipient
+
+            if not recipient or not sender:
+                flash('Message received locally. Email delivery is not configured. Set CONTACT_RECIPIENT and CONTACT_SENDER in the Lambda environment.', 'error')
+                return redirect(url_for('contact'))
 
             subject = f"New contact form submission from {name}"
             body_text = (
@@ -255,6 +268,15 @@ try:
 
     def lambda_handler(event, context):
         event = _normalize_event_for_awsgi(event)
+        # Emit a lightweight log so we can confirm handler runs and see path/method
+        try:
+            rc = (event or {}).get('requestContext', {})
+            http = rc.get('http', {})
+            method = http.get('method') or event.get('httpMethod')
+            path = event.get('rawPath') or http.get('path') or event.get('path')
+            logging.getLogger(__name__).info("lambda_handler invoked method=%s path=%s", method, path)
+        except Exception:
+            logging.getLogger(__name__).info("lambda_handler invoked")
         # Ensure binary types (images, pdf, fonts) are base64-encoded by awsgi
         binary_types = (
             'application/octet-stream',

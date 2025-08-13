@@ -20,11 +20,11 @@ Parameters:
     Description: Flask SECRET_KEY environment variable (required; set to a strong random value).
   ContactRecipientParam:
     Type: String
-    Default: ''
+    Default: 'jeffrey.russell.smith@gmail.com'
     Description: Email address that should receive contact form messages (must be SES-verified if SES is in sandbox).
   ContactSenderParam:
     Type: String
-    Default: ''
+    Default: 'jeffrey.russell.smith@gmail.com'
     Description: Verified SES identity to send from (defaults to ContactRecipientParam if left blank).
   SesRegionParam:
     Type: String
@@ -44,6 +44,7 @@ Resources:
           CONTACT_RECIPIENT: !Ref ContactRecipientParam
           CONTACT_SENDER: !If [HasSender, !Ref ContactSenderParam, !Ref ContactRecipientParam]
           SES_REGION: !If [HasSesRegion, !Ref SesRegionParam, '']
+          LOG_LEVEL: INFO
       Policies:
         - AWSLambdaBasicExecutionRole
         - Statement:
