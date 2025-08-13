@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 import os
 import base64, mimetypes
+import logging
 from werkzeug.utils import safe_join
 
 from resume_parser import extract_experience_from_pdf
@@ -8,6 +9,10 @@ from resume_parser import extract_experience_from_pdf
 
 def create_app():
     app = Flask(__name__)
+    # Basic logging setup (inherits Lambda's log handler in AWS)
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
     secret_from_env = os.environ.get('SECRET_KEY')
     running_in_lambda = bool(os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
     if secret_from_env:
@@ -27,6 +32,9 @@ def create_app():
     app.config['CONTACT_RECIPIENT'] = os.environ.get('CONTACT_RECIPIENT')
     # If CONTACT_SENDER not provided, default to recipient (valid when SES verifies that address)
     app.config['CONTACT_SENDER'] = os.environ.get('CONTACT_SENDER') or app.config['CONTACT_RECIPIENT']
+    # Allow overriding SES region explicitly if needed; otherwise use Lambda's region
+    app.config['SES_REGION'] = os.environ.get('SES_REGION') or os.environ.get('AWS_REGION') or os.environ.get('AWS_DEFAULT_REGION') or 'us-east-1'
+    logger.info("App initialized. SES region=%s, contact_recipient_set=%s", app.config['SES_REGION'], bool(app.config['CONTACT_RECIPIENT']))
 
     # Preload resume experience at startup
     provided = [
@@ -156,10 +164,9 @@ def create_app():
             # Try to send via AWS SES
             try:
                 import boto3  # type: ignore
-                import os as _os
-                region = _os.environ.get('AWS_REGION') or _os.environ.get('AWS_DEFAULT_REGION') or 'us-east-1'
+                region = app.config.get('SES_REGION')
                 ses = boto3.client('ses', region_name=region)
-                ses.send_email(
+                resp = ses.send_email(
                     Source=sender,
                     Destination={'ToAddresses': [recipient]},
                     Message={
@@ -168,10 +175,13 @@ def create_app():
                     },
                     ReplyToAddresses=[email_addr] if email_addr else []
                 )
+                msg_id = (resp or {}).get('MessageId')
+                logging.getLogger(__name__).info("SES send_email success: MessageId=%s to=%s from=%s region=%s", msg_id, recipient, sender, region)
                 flash(f'Thanks {name}! Your message has been sent. I will get back to {email_addr} soon.', 'success')
             except Exception as e:
-                # Do not expose sensitive details; optionally log if you have logging
-                flash('Sorry, there was an issue sending your message. Please try again later.', 'error')
+                logging.getLogger(__name__).exception("SES send_email failed: to=%s from=%s region=%s", recipient, sender, app.config.get('SES_REGION'))
+                # Offer a helpful hint without exposing sensitive details
+                flash('Sorry, there was an issue sending your message. If this persists, please email me directly at the address in the footer.', 'error')
             return redirect(url_for('contact'))
         return render_template('contact.html')
 

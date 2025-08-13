@@ -8,6 +8,9 @@ Globals:
     Timeout: 60
     MemorySize: 512
     Tracing: PassThrough
+Conditions:
+  HasSender: !Not [!Equals [!Ref ContactSenderParam, ""]]
+  HasSesRegion: !Not [!Equals [!Ref SesRegionParam, ""]]
 
 Parameters:
   SecretKeyParam:
@@ -15,6 +18,18 @@ Parameters:
     NoEcho: true
     MinLength: 32
     Description: Flask SECRET_KEY environment variable (required; set to a strong random value).
+  ContactRecipientParam:
+    Type: String
+    Default: ''
+    Description: Email address that should receive contact form messages (must be SES-verified if SES is in sandbox).
+  ContactSenderParam:
+    Type: String
+    Default: ''
+    Description: Verified SES identity to send from (defaults to ContactRecipientParam if left blank).
+  SesRegionParam:
+    Type: String
+    Default: ''
+    Description: Optional SES region override (leave blank to use Lambda region).
 
 Resources:
   FlaskFunction:
@@ -26,8 +41,9 @@ Resources:
       Environment:
         Variables:
           SECRET_KEY: !Ref SecretKeyParam
-          CONTACT_RECIPIENT: ''  # set via sam deploy or console to your email (SES verified)
-          CONTACT_SENDER: ''     # optional; defaults to CONTACT_RECIPIENT
+          CONTACT_RECIPIENT: !Ref ContactRecipientParam
+          CONTACT_SENDER: !If [HasSender, !Ref ContactSenderParam, !Ref ContactRecipientParam]
+          SES_REGION: !If [HasSesRegion, !Ref SesRegionParam, '']
       Policies:
         - AWSLambdaBasicExecutionRole
         - Statement:

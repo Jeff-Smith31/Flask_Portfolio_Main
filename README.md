@@ -7,6 +7,7 @@ A Flask application for a full‑stack software developer portfolio. Now deploya
 - Modern dark UI with marquee, portfolio grid, and subtle animations
 - Links for GitHub, LinkedIn, projects, and PDF résumé
 - Serverless-ready via AWS Lambda (awsgi adapter)
+- Contact form sends email via Amazon SES (with logging and helpful diagnostics)
 
 ## Local Development
 1. Create and activate a virtual environment (optional).
@@ -27,8 +28,12 @@ Manual (local) deploy with SAM:
 sam build
 
 # Deploy (uses samconfig.toml defaults)
-# Provide your SECRET_KEY at deploy time (required). Example:
-sam deploy --parameter-overrides SecretKeyParam=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+# Provide your SECRET_KEY and contact parameters at deploy time. Example:
+sam deploy \
+  --parameter-overrides \
+    SecretKeyParam=$(python -c "import secrets; print(secrets.token_urlsafe(32))") \
+    ContactRecipientParam=you@example.com \
+    ContactSenderParam=you@example.com
 ```
 
 ## CI/CD note on SECRET_KEY
