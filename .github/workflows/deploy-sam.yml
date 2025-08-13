@@ -62,7 +62,7 @@ jobs:
         env:
           FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
           CONTACT_RECIPIENT: ${{ secrets.CONTACT_RECIPIENT || vars.CONTACT_RECIPIENT || 'jeffrey.russell.smith@gmail.com' }}
-          CONTACT_SENDER: ${{ secrets.CONTACT_SENDER || vars.CONTACT_SENDER || 'jeffrey-smith-dev.com' }}
+          CONTACT_SENDER: ${{ secrets.CONTACT_SENDER || vars.CONTACT_SENDER || '' }}
           SES_REGION: ${{ vars.SES_REGION || 'us-east-1' }}
         run: |
           if [ -z "${FLASK_SECRET_KEY}" ]; then

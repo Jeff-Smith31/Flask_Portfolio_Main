@@ -40,7 +40,12 @@ def create_app():
     # Contact email configuration
     app.config['CONTACT_RECIPIENT'] = os.environ.get('CONTACT_RECIPIENT')
     # If CONTACT_SENDER not provided, default to recipient (valid when SES verifies that address)
-    app.config['CONTACT_SENDER'] = os.environ.get('CONTACT_SENDER') or app.config['CONTACT_RECIPIENT']
+    sender_env = os.environ.get('CONTACT_SENDER')
+    app.config['CONTACT_SENDER'] = sender_env or app.config['CONTACT_RECIPIENT']
+    # If sender looks like a domain (no @), fall back to recipient to avoid invalid SES Source
+    if app.config['CONTACT_SENDER'] and '@' not in app.config['CONTACT_SENDER']:
+        app.logger.warning("CONTACT_SENDER lacks '@' (value=%s). Falling back to CONTACT_RECIPIENT.", app.config['CONTACT_SENDER'])
+        app.config['CONTACT_SENDER'] = app.config['CONTACT_RECIPIENT']
     # Allow overriding SES region explicitly if needed; otherwise use Lambda's region
     app.config['SES_REGION'] = os.environ.get('SES_REGION') or os.environ.get('AWS_REGION') or os.environ.get('AWS_DEFAULT_REGION') or 'us-east-1'
     logger.info("App initialized. SES region=%s, contact_recipient_set=%s", app.config['SES_REGION'], bool(app.config['CONTACT_RECIPIENT']))
@@ -155,10 +160,11 @@ def create_app():
                 return redirect(url_for('contact'))
 
             recipient = app.config.get('CONTACT_RECIPIENT')
-            sender = app.config.get('CONTACT_SENDER') or recipient
+            # Per request: always send from this Gmail address
+            sender = 'Jeffrey Smith <jeffrey.russell.smith@gmail.com>'
 
-            if not recipient or not sender:
-                flash('Message received locally. Email delivery is not configured. Set CONTACT_RECIPIENT and CONTACT_SENDER in the Lambda environment.', 'error')
+            if not recipient:
+                flash('Message received locally. Email delivery is not configured. Set CONTACT_RECIPIENT in the Lambda environment.', 'error')
                 return redirect(url_for('contact'))
 
             subject = f"New contact form submission from {name}"
@@ -167,6 +173,19 @@ def create_app():
                 f"Name: {name}\n"
                 f"Email: {email_addr}\n\n"
                 f"Message:\n{message}\n"
+            )
+            body_html = (
+                f"""
+                <html>
+                  <body style='font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; color:#222;'>
+                    <p>You received a new message via the portfolio contact form.</p>
+                    <p><strong>Name:</strong> {name}<br>
+                       <strong>Email:</strong> {email_addr}</p>
+                    <p><strong>Message:</strong></p>
+                    <p style='white-space:pre-wrap'>{message}</p>
+                  </body>
+                </html>
+                """
             )
 
             # Try to send via AWS SES
@@ -179,14 +198,17 @@ def create_app():
                     Destination={'ToAddresses': [recipient]},
                     Message={
                         'Subject': {'Data': subject, 'Charset': 'UTF-8'},
-                        'Body': {'Text': {'Data': body_text, 'Charset': 'UTF-8'}}
+                        'Body': {
+                            'Text': {'Data': body_text, 'Charset': 'UTF-8'},
+                            'Html': {'Data': body_html, 'Charset': 'UTF-8'},
+                        }
                     },
                     ReplyToAddresses=[email_addr] if email_addr else []
                 )
                 msg_id = (resp or {}).get('MessageId')
                 flash(f'Thanks {name}! Your message has been sent. I will get back to {email_addr} soon.', 'success')
                 logging.getLogger(__name__).info("SES send_email success: MessageId=%s to=%s from=%s region=%s", msg_id, recipient, sender, region)
-            except Exception as e:
+            except Exception:
                 logging.getLogger(__name__).exception("SES send_email failed: to=%s from=%s region=%s", recipient, sender, app.config.get('SES_REGION'))
                 # Offer a helpful hint without exposing sensitive details
                 flash('Sorry, there was an issue sending your message. If this persists, please email me directly at the address in the footer.', 'error')
