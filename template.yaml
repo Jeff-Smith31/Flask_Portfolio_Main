@@ -4,8 +4,8 @@ Description: Flask Portfolio - AWS SAM template (Serverless option B)
 
 Globals:
   Function:
-    Runtime: python3.12
-    Timeout: 30
+    Runtime: python3.11
+    Timeout: 60
     MemorySize: 512
     Tracing: PassThrough
 

@@ -2,7 +2,7 @@ version = 0.1
 
 [default]
 [default.build]
-#use_container = false
+use_container = false
 
 [default.deploy]
 stack_name = "flask-portfolio-sam"
