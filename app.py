@@ -212,13 +212,17 @@ def create_app():
                     send_args['ReturnPath'] = return_path
                 resp = ses.send_email(**send_args)
                 msg_id = (resp or {}).get('MessageId')
-                flash(f'Thanks {name}! Your message has been sent. I will get back to {email_addr} soon.', 'success')
                 logging.getLogger(__name__).info("SES send_email success: MessageId=%s to=%s from=%s region=%s", msg_id, recipient, sender, region)
+                # Redirect with a param so success is guaranteed even if initial flash is lost
+                return redirect(url_for('contact', sent='1'))
             except Exception:
                 logging.getLogger(__name__).exception("SES send_email failed: to=%s from=%s region=%s", recipient, sender, app.config.get('SES_REGION'))
                 # Offer a helpful hint without exposing sensitive details
                 flash('Sorry, there was an issue sending your message. If this persists, please email me directly at the address in the footer.', 'error')
-            return redirect(url_for('contact'))
+                return redirect(url_for('contact'))
+        # GET request: show success if redirected with sent=1
+        if request.method == 'GET' and request.args.get('sent') == '1':
+            flash('Thanks! Your message has been sent.', 'success')
         return render_template('contact.html')
 
     @app.route('/resume')
