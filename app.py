@@ -146,12 +146,7 @@ def create_app():
                 return redirect(url_for('contact'))
 
             recipient = 'jeffrey.russell.smith@gmail.com'
-            sender = app.config.get('CONTACT_SENDER')
-
-            if not sender:
-                # In local/dev without env vars, avoid crashing and inform via flash
-                flash('Message received locally. Email delivery is not configured. Set CONTACT_SENDER to a verified SES identity to enable email.', 'error')
-                return redirect(url_for('contact'))
+            sender = 'jeffrey.russell.smith@gmail.com'
 
             subject = f"New contact form submission from {name}"
             body_text = (
