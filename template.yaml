@@ -24,7 +24,7 @@ Parameters:
     Description: Email address that should receive contact form messages (must be SES-verified if SES is in sandbox).
   ContactSenderParam:
     Type: String
-    Default: ''
+    Default: 'jeffrey.russell.smith@gmail.com'
     Description: Verified SES identity to send from (leave blank to use ContactRecipientParam).
   SesRegionParam:
     Type: String
