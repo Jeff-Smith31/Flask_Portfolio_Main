@@ -59,7 +59,7 @@
     <div class="portfolio-grid">
       {% for item in items %}
         <a class="tile" href="{{ item.link }}" target="_blank" rel="noopener noreferrer">
-          <img src="{{ asset_data_uri(item.image) }}" alt="{{ item.title }}">
+          <img src="{{ url_for('assets', filename=item.image) }}" alt="{{ item.title }}">
           <div class="tile-meta">
             <strong>{{ item.title }}</strong>
             <span>{{ ', '.join(item.tags) }}</span>
