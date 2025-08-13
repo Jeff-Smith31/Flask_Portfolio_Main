@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 import os
+import base64, mimetypes
+from werkzeug.utils import safe_join
 
 from resume_parser import extract_experience_from_pdf
 
@@ -182,6 +184,25 @@ def create_app():
     def assets(filename):
         # Serve files from the assets directory
         return send_from_directory(os.path.join(app.root_path, 'assets'), filename)
+
+    # Helper: build data URI for assets to avoid binary issues through awsgi
+    def asset_data_uri(path: str) -> str:
+        try:
+            # Resolve and ensure the path stays within assets directory
+            assets_dir = os.path.join(app.root_path, 'assets')
+            full_path = safe_join(assets_dir, path)
+            if not full_path or not os.path.exists(full_path):
+                return ''
+            mime, _ = mimetypes.guess_type(full_path)
+            mime = mime or 'application/octet-stream'
+            with open(full_path, 'rb') as f:
+                b64 = base64.b64encode(f.read()).decode('ascii')
+            return f'data:{mime};base64,{b64}'
+        except Exception:
+            return ''
+
+    # Expose helper to Jinja templates
+    app.jinja_env.globals['asset_data_uri'] = asset_data_uri
 
     return app
 
