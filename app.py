@@ -224,8 +224,50 @@ app = create_app()
 # AWS Lambda handler (via awsgi)
 try:
     import awsgi  # type: ignore
+    from urllib.parse import parse_qs
+
+    def _normalize_event_for_awsgi(evt: dict) -> dict:
+        """
+        Normalize Lambda Function URL / API Gateway HTTP API v2 events so that
+        awsgi (which may expect httpMethod in some paths) can handle them.
+        This is a minimal, non-invasive mapping: if httpMethod is missing but
+        requestContext.http.method is present, we synthesize httpMethod and a
+        few related fields from v2 keys. Otherwise, return the event unchanged.
+        """
+        try:
+            if isinstance(evt, dict) and 'httpMethod' not in evt:
+                rc = evt.get('requestContext') or {}
+                http = rc.get('http') or {}
+                method = http.get('method')
+                if method:
+                    # Build a shallow API Gateway v1-like shape required by some adapters
+                    new_evt = dict(evt)  # shallow copy
+                    new_evt['httpMethod'] = method
+                    # Path
+                    path = evt.get('rawPath') or http.get('path') or evt.get('path') or '/'
+                    new_evt['path'] = path
+                    # Query string
+                    if 'queryStringParameters' not in new_evt:
+                        raw_qs = evt.get('rawQueryString') or ''
+                        if raw_qs:
+                            qs_map = {k: v[0] if isinstance(v, list) else v for k, v in parse_qs(raw_qs, keep_blank_values=True).items()}
+                        else:
+                            qs_map = None
+                        new_evt['queryStringParameters'] = qs_map
+                    # Headers fallback
+                    if 'headers' not in new_evt or new_evt['headers'] is None:
+                        new_evt['headers'] = {}
+                    # Body passthrough, ensure isBase64Encoded present
+                    if 'isBase64Encoded' not in new_evt:
+                        new_evt['isBase64Encoded'] = bool(evt.get('isBase64Encoded', False))
+                    return new_evt
+        except Exception:
+            # If normalization fails, fall back to original event
+            return evt
+        return evt
 
     def lambda_handler(event, context):
+        event = _normalize_event_for_awsgi(event)
         return awsgi.response(app, event, context)
 except Exception:
     # awsgi not available in local/dev environments
