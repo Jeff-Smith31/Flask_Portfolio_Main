@@ -61,17 +61,27 @@ jobs:
       - name: SAM Deploy
         env:
           FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
+          CONTACT_RECIPIENT: ${{ secrets.CONTACT_RECIPIENT || vars.CONTACT_RECIPIENT || 'jeffrey.russell.smith@gmail.com' }}
+          CONTACT_SENDER: ${{ secrets.CONTACT_SENDER || vars.CONTACT_SENDER || 'jeffrey.russell.smith@gmail.com' }}
+          SES_REGION: ${{ vars.SES_REGION || '' }}
         run: |
           if [ -z "${FLASK_SECRET_KEY}" ]; then
             echo "Warning: FLASK_SECRET_KEY GitHub secret not set. Generating a strong random key for this deploy (will rotate sessions)." >&2
             FLASK_SECRET_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
           fi
+          echo "Using CONTACT_RECIPIENT=${CONTACT_RECIPIENT}"
+          echo "Using CONTACT_SENDER=${CONTACT_SENDER}"
+          if [ -n "${SES_REGION}" ]; then echo "Using SES_REGION=${SES_REGION}"; fi
           sam deploy \
             --stack-name "$STACK_NAME" \
             --s3-bucket "${{ steps.prepare-bucket.outputs.bucket }}" \
             --no-fail-on-empty-changeset \
             --capabilities CAPABILITY_IAM \
-            --parameter-overrides SecretKeyParam=${FLASK_SECRET_KEY} \
+            --parameter-overrides \
+              SecretKeyParam=${FLASK_SECRET_KEY} \
+              ContactRecipientParam="${CONTACT_RECIPIENT}" \
+              ContactSenderParam="${CONTACT_SENDER}" \
+              SesRegionParam="${SES_REGION}" \
             --region "$AWS_REGION"
 
       - name: Show Outputs

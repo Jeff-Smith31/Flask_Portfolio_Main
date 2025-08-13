@@ -184,8 +184,8 @@ def create_app():
                     ReplyToAddresses=[email_addr] if email_addr else []
                 )
                 msg_id = (resp or {}).get('MessageId')
-                logging.getLogger(__name__).info("SES send_email success: MessageId=%s to=%s from=%s region=%s", msg_id, recipient, sender, region)
                 flash(f'Thanks {name}! Your message has been sent. I will get back to {email_addr} soon.', 'success')
+                logging.getLogger(__name__).info("SES send_email success: MessageId=%s to=%s from=%s region=%s", msg_id, recipient, sender, region)
             except Exception as e:
                 logging.getLogger(__name__).exception("SES send_email failed: to=%s from=%s region=%s", recipient, sender, app.config.get('SES_REGION'))
                 # Offer a helpful hint without exposing sensitive details
