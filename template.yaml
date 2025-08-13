@@ -24,12 +24,16 @@ Parameters:
     Description: Email address that should receive contact form messages (must be SES-verified if SES is in sandbox).
   ContactSenderParam:
     Type: String
-    Default: 'jeffrey.russell.smith@gmail.com'
+    Default: 'contact@jeffrey-smith-dev.com'
     Description: Verified SES identity to send from (leave blank to use ContactRecipientParam).
   SesRegionParam:
     Type: String
     Default: 'us-east-1'
     Description: Optional SES region override (leave blank to use Lambda region).
+  ReturnPathParam:
+    Type: String
+    Default: ''
+    Description: Optional Return-Path (MAIL FROM) address for bounce alignment (requires Custom MAIL FROM in SES).
 
 Resources:
   FlaskFunction:
@@ -44,6 +48,7 @@ Resources:
           CONTACT_RECIPIENT: !Ref ContactRecipientParam
           CONTACT_SENDER: !If [HasSender, !Ref ContactSenderParam, !Ref ContactRecipientParam]
           SES_REGION: !If [HasSesRegion, !Ref SesRegionParam, '']
+          RETURN_PATH: !Ref ReturnPathParam
           LOG_LEVEL: INFO
       Policies:
         - AWSLambdaBasicExecutionRole

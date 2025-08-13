@@ -62,8 +62,9 @@ jobs:
         env:
           FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
           CONTACT_RECIPIENT: ${{ secrets.CONTACT_RECIPIENT || vars.CONTACT_RECIPIENT || 'jeffrey.russell.smith@gmail.com' }}
-          CONTACT_SENDER: ${{ secrets.CONTACT_SENDER || vars.CONTACT_SENDER || 'jeffrey.russell.smith@gmail.com' }}
+          CONTACT_SENDER: ${{ secrets.CONTACT_SENDER || vars.CONTACT_SENDER || 'contact@jeffrey-smith-dev.com' }}
           SES_REGION: ${{ vars.SES_REGION || 'us-east-1' }}
+          RETURN_PATH: ${{ secrets.RETURN_PATH || vars.RETURN_PATH || '' }}
         run: |
           if [ -z "${FLASK_SECRET_KEY}" ]; then
             echo "Warning: FLASK_SECRET_KEY GitHub secret not set. Generating a strong random key for this deploy (will rotate sessions)." >&2
@@ -80,6 +81,9 @@ jobs:
           )
           if [ -n "${SES_REGION}" ]; then
             PARAMS+=("SesRegionParam=${SES_REGION}")
+          fi
+          if [ -n "${RETURN_PATH}" ]; then
+            PARAMS+=("ReturnPathParam=${RETURN_PATH}")
           fi
 
           sam deploy \

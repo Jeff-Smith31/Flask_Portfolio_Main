@@ -48,7 +48,9 @@ def create_app():
         app.config['CONTACT_SENDER'] = app.config['CONTACT_RECIPIENT']
     # Allow overriding SES region explicitly if needed; otherwise use Lambda's region
     app.config['SES_REGION'] = os.environ.get('SES_REGION') or os.environ.get('AWS_REGION') or os.environ.get('AWS_DEFAULT_REGION') or 'us-east-1'
-    logger.info("App initialized. SES region=%s, contact_recipient_set=%s", app.config['SES_REGION'], bool(app.config['CONTACT_RECIPIENT']))
+    # Optional: Return-Path (MAIL FROM) address if you have Custom MAIL FROM configured in SES for your domain
+    app.config['RETURN_PATH'] = os.environ.get('RETURN_PATH')
+    logger.info("App initialized. SES region=%s, contact_recipient_set=%s, return_path_set=%s", app.config['SES_REGION'], bool(app.config['CONTACT_RECIPIENT']), bool(app.config['RETURN_PATH']))
 
     # Preload resume experience at startup
     provided = [
@@ -160,11 +162,12 @@ def create_app():
                 return redirect(url_for('contact'))
 
             recipient = app.config.get('CONTACT_RECIPIENT')
-            # Per request: always send from this Gmail address
-            sender = 'Jeffrey Smith <jeffrey.russell.smith@gmail.com>'
+            # Use configured sender (recommended: an address on your domain for best deliverability)
+            sender = app.config.get('CONTACT_SENDER') or recipient
+            return_path = app.config.get('RETURN_PATH')
 
-            if not recipient:
-                flash('Message received locally. Email delivery is not configured. Set CONTACT_RECIPIENT in the Lambda environment.', 'error')
+            if not recipient or not sender:
+                flash('Message received locally. Email delivery is not configured. Set CONTACT_RECIPIENT and CONTACT_SENDER in the Lambda environment.', 'error')
                 return redirect(url_for('contact'))
 
             subject = f"New contact form submission from {name}"
@@ -193,7 +196,7 @@ def create_app():
                 import boto3  # type: ignore
                 region = app.config.get('SES_REGION')
                 ses = boto3.client('ses', region_name=region)
-                resp = ses.send_email(
+                send_args = dict(
                     Source=sender,
                     Destination={'ToAddresses': [recipient]},
                     Message={
@@ -205,6 +208,9 @@ def create_app():
                     },
                     ReplyToAddresses=[email_addr] if email_addr else []
                 )
+                if return_path:
+                    send_args['ReturnPath'] = return_path
+                resp = ses.send_email(**send_args)
                 msg_id = (resp or {}).get('MessageId')
                 flash(f'Thanks {name}! Your message has been sent. I will get back to {email_addr} soon.', 'success')
                 logging.getLogger(__name__).info("SES send_email success: MessageId=%s to=%s from=%s region=%s", msg_id, recipient, sender, region)
