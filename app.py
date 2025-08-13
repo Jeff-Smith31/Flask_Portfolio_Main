@@ -250,7 +250,18 @@ try:
 
     def lambda_handler(event, context):
         event = _normalize_event_for_awsgi(event)
-        return awsgi.response(app, event, context)
+        # Ensure binary types (images, pdf, fonts) are base64-encoded by awsgi
+        binary_types = (
+            'application/octet-stream',
+            'application/pdf',
+            'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+            'font/ttf', 'font/otf', 'font/woff', 'font/woff2'
+        )
+        try:
+            return awsgi.response(app, event, context, base64_content_types=binary_types)
+        except TypeError:
+            # Older awsgi versions may not support the parameter; fall back to default behavior
+            return awsgi.response(app, event, context)
 except Exception:
     # awsgi not available in local/dev environments
     pass
