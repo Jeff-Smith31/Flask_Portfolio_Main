@@ -51,7 +51,6 @@ Resources:
         AllowMethods:
           - GET
           - POST
-          - OPTIONS
 
   FlaskFunctionUrlPermission:
     Type: AWS::Lambda::Permission
