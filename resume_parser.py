@@ -3,7 +3,7 @@ import os
 
 def extract_experience_from_pdf(pdf_path: str):
     try:
-        from PyPDF2 import PdfReader
+        from pypdf import PdfReader
     except Exception:
         return []
 
