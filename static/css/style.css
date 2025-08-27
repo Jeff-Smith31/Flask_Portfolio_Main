@@ -15,6 +15,13 @@ img{max-width:100%; display:block}
 .header-inner{display:flex; align-items:center; justify-content:space-between; padding:14px 0}
 .logo{font-weight:900; letter-spacing:.5px; font-size:22px}
 .logo span{color:var(--brand)}
+/* Ensure the header name link has no underline and does not change color when visited/clicked */
+.site-header .logo{color:var(--fg); text-decoration:none}
+.site-header .logo:link,
+.site-header .logo:visited,
+.site-header .logo:hover,
+.site-header .logo:active{color:var(--fg); text-decoration:none}
+.site-header .logo:focus{outline:2px solid var(--brand); outline-offset:3px; text-decoration:none}
 .nav{display:flex; gap:20px; align-items:center}
 .nav a{color:var(--fg); text-decoration:none; opacity:.9}
 .nav .cta{background:var(--brand); color:#fff; padding:8px 14px; border-radius:10px}
@@ -71,10 +78,11 @@ img{max-width:100%; display:block}
 .about-photo{border-radius:16px; border:1px solid var(--line); box-shadow:0 10px 50px rgba(0,0,0,.3)}
 
 /* Forms */
-.contact-form{padding:26px; border:1px solid var(--line); border-radius:16px; background:var(--card); margin:26px 0 60px}
+.contact-form{padding:26px; border:1px solid var(--line); border-radius:16px; background:var(--card); margin:40px 0}
 .field{display:flex; flex-direction:column; gap:8px}
 .field input,.field textarea{background:#0e0e16; border:1px solid var(--line); color:var(--fg); border-radius:10px; padding:12px}
 .field input:focus,.field textarea:focus{outline:2px solid var(--brand)}
+.contact-form button{margin-top:12px}
 
 /* Resume */
 .timeline{list-style:none; padding:0; margin:0 0 26px; font-size: calc(1rem - 2pt)}
@@ -109,6 +117,9 @@ img{max-width:100%; display:block}
 
 /* Footer */
 .site-footer{border-top:1px solid var(--line); margin-top:60px}
+.site-footer a{color:#cfd1dd; text-decoration:none}
+.site-footer a:hover{color:#ffffff}
+.site-footer a:focus{outline:2px solid var(--brand); outline-offset:2px}
 .footer-grid{display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:20px; padding:30px 0}
 .footer-grid h4{margin:.2rem 0 .6rem}
 .footer-grid ul{list-style:none; padding:0; margin:0; display:grid; gap:6px}
@@ -122,3 +133,6 @@ img{max-width:100%; display:block}
 
 /* Home spacing */
 .highlights{margin-top:20px; margin-bottom:20px}
+
+/* Utility spacing */
+.spaced-top{margin-top:30px}

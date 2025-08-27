@@ -146,9 +146,6 @@ def create_app():
     def about():
         return render_template('about.html')
 
-    @app.route('/certifications')
-    def certifications():
-        return render_template('certifications.html')
 
     @app.route('/contact', methods=['GET', 'POST'])
     def contact():
