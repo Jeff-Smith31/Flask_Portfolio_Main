@@ -15,6 +15,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // PWA install prompt handling
+  let deferredPrompt;
+  const installBtn = document.getElementById('install-btn');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) installBtn.style.display = 'inline-block';
+  });
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        installBtn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    });
+  }
+  window.addEventListener('appinstalled', () => {
+    if (installBtn) installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+
   // Resume: collapse details when clicking bottom "Show less"
   document.querySelectorAll('.more-bullets .show-less').forEach((el) => {
     el.addEventListener('click', (e) => {

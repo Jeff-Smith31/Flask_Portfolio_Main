@@ -142,6 +142,23 @@ def create_app():
     def work():
         return render_template('work.html', items=portfolio_items)
 
+    # Simple tasks API to support frontend fetches
+    @app.route('/api/tasks')
+    def api_tasks():
+        # Map portfolio items to a generic "task" schema for compatibility
+        tasks = [
+            {
+                'id': idx + 1,
+                'title': item['title'],
+                'tags': item.get('tags', []),
+                'image': url_for('assets', filename=item.get('image', '')),
+                'link': item.get('link')
+            }
+            for idx, item in enumerate(portfolio_items)
+        ]
+        from flask import jsonify
+        return jsonify({'tasks': tasks})
+
     @app.route('/about')
     def about():
         return render_template('about.html')
@@ -226,6 +243,11 @@ def create_app():
     def resume():
         experience = app.config.get('RESUME_EXPERIENCE') or []
         return render_template('resume.html', experience=experience)
+
+    @app.route('/offline')
+    def offline():
+        # Simple offline fallback page used by the service worker
+        return render_template('offline.html')
 
     @app.route('/assets/<path:filename>')
     def assets(filename):
